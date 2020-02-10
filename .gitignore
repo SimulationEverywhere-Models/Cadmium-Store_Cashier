@@ -1,0 +1,10 @@
+*.o
+*.exe
+bin/*
+simulation_results/*
+# MacOS stuff
+.DS_Store
+# CLion stuff
+.idea/
+cmake-build-debug/*
+
