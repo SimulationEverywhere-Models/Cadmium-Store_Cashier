@@ -8,26 +8,47 @@
 using namespace std;
 
 /*******************************************/
-/**************** Client *******************/
+/************** Messages *******************/
 /*******************************************/
+template <typename T>
 struct newClient {
     int clientId;
-    explicit newClient(int id) : clientId(id) {}
+    T arrived;
+    explicit newClient(int id, T when) : clientId(id), arrived(when) {}
 };
 
+template <typename T>
 struct availableEmployee {
     int employeeId;
-    explicit availableEmployee(int id) : employeeId(id) {}
+    T arrived;
+    explicit availableEmployee(int id, T when) : employeeId(id), arrived(when) {}
 };
 
-struct servedClient {
-    int clientId;
+template<typename T>
+struct clientPairing {
+    newClient<T> client;
     int employeeId;
-    explicit servedClient(int client, int employee) : clientId(client), employeeId(employee) {}
+    explicit clientPairing(newClient<T> client_, int employee): client(client_), employeeId(employee) {}
 };
 
-ostream &operator << (ostream &os, const  newClient &msg);
-ostream &operator << (ostream &os, const  availableEmployee &msg);
-ostream &operator << (ostream &os, const  servedClient &msg);
+template <typename T>
+struct servedClient {
+    int clientId, employeeId;
+    T arrived, dispatched, delay;
+    explicit servedClient(int client, int employee, T from, T to) : clientId(client), employeeId(employee),
+                                                                    arrived(from), dispatched(to), delay(to - from) {}
+};
+
+template <typename T>
+ostream &operator << (ostream &os, const  newClient<T> &msg);
+
+template <typename T>
+ostream &operator << (ostream &os, const  availableEmployee<T> &msg);
+
+template <typename T>
+ostream &operator << (ostream &os, const  clientPairing<T> &msg);
+
+template <typename T>
+ostream &operator << (ostream &os, const  servedClient<T> &msg);
 
 #endif //STORE_CASHIER_MESSAGE_HPP

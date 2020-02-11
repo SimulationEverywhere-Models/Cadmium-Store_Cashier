@@ -23,8 +23,9 @@ using namespace cadmium;
 using namespace std;
 
 //Port definition
+template <typename T>
 struct clientGenerator_defs{
-    struct out : public out_port<newClient> {};
+    struct out : public out_port<newClient<T>> {};
 };
 
 template<typename T>
@@ -32,7 +33,7 @@ class ClientGenerator{
 public:
     // ports definition
     using input_ports = tuple<>;
-    using output_ports = tuple<typename clientGenerator_defs::out>;
+    using output_ports = tuple<typename clientGenerator_defs<T>::out>;
 
     double mean;
     double stddev;
@@ -42,7 +43,8 @@ public:
     struct state_type{
         int clientIndex;
         T nextTimeout;
-        state_type(): clientIndex(0), nextTimeout({}) {};
+        T clock;
+        state_type(): clientIndex(0), nextTimeout(T()), clock(T()) {};
     };
     state_type state;
 
@@ -64,6 +66,7 @@ public:
     // internal transition
     void internal_transition() {
         state.clientIndex++;
+        state.clock += state.nextTimeout;
         state.nextTimeout = nextTimeout();
     }
 
@@ -79,10 +82,10 @@ public:
     // output function
     typename make_message_bags<output_ports>::type output() const {
         typename make_message_bags<output_ports>::type bags;
-        vector<newClient> bagPortOut;
-        newClient msg = newClient(state.clientIndex);
+        vector<newClient<T>> bagPortOut;
+        newClient msg = newClient(state.clientIndex, state.clock + state.nextTimeout);
         bagPortOut.push_back(msg);
-        get_messages<typename clientGenerator_defs::out>(bags) = bagPortOut;
+        get_messages<typename clientGenerator_defs<T>::out>(bags) = bagPortOut;
         return bags;
     }
 

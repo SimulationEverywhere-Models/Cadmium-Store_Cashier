@@ -7,4 +7,3 @@ simulation_results/*
 # CLion stuff
 .idea/
 cmake-build-debug/*
-
