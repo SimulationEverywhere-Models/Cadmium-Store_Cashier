@@ -10,21 +10,18 @@ build_folder := $(shell mkdir -p build)
 results_folder := $(shell mkdir -p simulation_results)
 
 #TARGET TO COMPILE ALL THE TESTS TOGETHER (NOT SIMULATOR)
-message.o: data_structures/message.cpp
-	$(CC) -g -c $(CFLAGS) $(INCLUDECADMIUM) $(INCLUDEDESTIMES) data_structures/message.cpp -o build/message.o
-
 main_top.o: top_model/main.cpp
 	$(CC) -g -c $(CFLAGS) $(INCLUDECADMIUM) $(INCLUDEDESTIMES) top_model/main.cpp -o build/main_top.o
 	
 main_client_generator_test.o: test/main_client_generator_test.cpp
 	$(CC) -g -c $(CFLAGS) $(INCLUDECADMIUM) $(INCLUDEDESTIMES) test/main_client_generator_test.cpp -o build/main_client_generator_test.o
 
-tests: main_client_generator_test.o message.o
-		$(CC) -g -o bin/CLIENT_GENERATOR_TEST build/main_client_generator_test.o build/message.o
+tests: main_client_generator_test.o
+		$(CC) -g -o bin/CLIENT_GENERATOR_TEST build/main_client_generator_test.o
 
 #TARGET TO COMPILE ONLY ABP SIMULATOR
-simulator: main_top.o message.o 
-	$(CC) -g -o bin/STORE_CASHIER build/main_top.o build/message.o
+simulator: main_top.o
+	$(CC) -g -o bin/STORE_CASHIER build/main_top.o
 	
 #TARGET TO COMPILE EVERYTHING (ABP SIMULATOR + TESTS TOGETHER)
 all: simulator tests

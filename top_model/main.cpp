@@ -29,7 +29,8 @@ using TIME = NDTime;
 /***** Define input port for coupled models *****/
 
 /***** Define output ports for coupled model *****/
-struct out_served : public out_port<servedClient>{};
+template <typename T>
+struct out_served : public out_port<servedClient<T>>{};
 
 int main(int argc, char ** argv) {
     /****** Client generator atomic model instantiation *******************/
@@ -49,19 +50,19 @@ int main(int argc, char ** argv) {
 
     /*******ABP SIMULATOR COUPLED MODEL********/
     dynamic::modeling::Ports iports_store = {};
-    dynamic::modeling::Ports oports_store = {typeid(out_served)};
+    dynamic::modeling::Ports oports_store = {typeid(out_served<TIME>)};
     dynamic::modeling::Models submodels_store = {generator, queue, employee_1, employee_2};
     dynamic::modeling::EICs eics_store = {};
     dynamic::modeling::EOCs eocs_store = {
-        dynamic::translate::make_EOC<employee_defs::outClient, out_served>("employee_1"),
-        dynamic::translate::make_EOC<employee_defs::outClient, out_served>("employee_2"),
+        dynamic::translate::make_EOC<employee_defs<TIME>::outClient, out_served<TIME>>("employee_1"),
+        dynamic::translate::make_EOC<employee_defs<TIME>::outClient, out_served<TIME>>("employee_2"),
     };
     dynamic::modeling::ICs ics_store = {
-        dynamic::translate::make_IC<clientGenerator_defs::out, queue_defs::inNewClient>("client_generator", "queue"),
-        dynamic::translate::make_IC<queue_defs::outServedClient, employee_defs::inClient>("queue","employee_1"),
-        dynamic::translate::make_IC<employee_defs::outAvailable, queue_defs::inAvailableEmployee>("employee_1","queue"),
-        dynamic::translate::make_IC<queue_defs::outServedClient, employee_defs::inClient>("queue","employee_2"),
-        dynamic::translate::make_IC<employee_defs::outAvailable, queue_defs::inAvailableEmployee>("employee_2","queue"),
+        dynamic::translate::make_IC<clientGenerator_defs<TIME>::out, queue_defs<TIME>::inNewClient>("client_generator", "queue"),
+        dynamic::translate::make_IC<queue_defs<TIME>::outPairedClient, employee_defs<TIME>::inClient>("queue", "employee_1"),
+        dynamic::translate::make_IC<employee_defs<TIME>::outAvailable, queue_defs<TIME>::inAvailableEmployee>("employee_1","queue"),
+        dynamic::translate::make_IC<queue_defs<TIME>::outPairedClient, employee_defs<TIME>::inClient>("queue", "employee_2"),
+        dynamic::translate::make_IC<employee_defs<TIME>::outAvailable, queue_defs<TIME>::inAvailableEmployee>("employee_2","queue"),
     };
     shared_ptr<dynamic::modeling::coupled<TIME>> store;
     store = make_shared<dynamic::modeling::coupled<TIME>>(

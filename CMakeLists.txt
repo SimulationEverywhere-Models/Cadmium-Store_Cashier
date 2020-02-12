@@ -12,8 +12,8 @@ find_package(Boost 1.40 COMPONENTS program_options REQUIRED)
 
 file(MAKE_DIRECTORY simulation_results)
 
-add_executable(test_client_generator test/main_client_generator_test.cpp data_structures/message.cpp)
-add_executable(simulator top_model/main.cpp data_structures/message.cpp)
+add_executable(test_client_generator test/main_client_generator_test.cpp)
+add_executable(simulator top_model/main.cpp)
 
 target_link_libraries(test_client_generator Boost::program_options)
 target_link_libraries(simulator Boost::program_options)
