@@ -24,8 +24,8 @@
 #include "../atomics/client_generator.hpp"
 
 //C++ libraries
-#include <iostream>
-#include <string>
+//#include <iostream>
+//#include <string>
 
 using namespace std;
 using namespace cadmium;
@@ -36,7 +36,7 @@ using TIME = NDTime;
 /***** Define input port for coupled models *****/
 
 /***** Define output ports for coupled model *****/
-struct out_served: public out_port<newClient>{};
+struct out_served: public out_port<newClient<TIME>>{};
 
 int main(){
     /****** Subnet atomic model instantiation *******************/
@@ -54,7 +54,7 @@ int main(){
     eics_TOP = {};
     dynamic::modeling::EOCs eocs_TOP;
     eocs_TOP = {
-            dynamic::translate::make_EOC<clientGenerator_defs::out,out_served>("generator")
+            dynamic::translate::make_EOC<clientGenerator_defs<TIME>::out,out_served>("generator")
     };
     dynamic::modeling::ICs ics_TOP = {};
     shared_ptr<dynamic::modeling::coupled<TIME>> TOP;
