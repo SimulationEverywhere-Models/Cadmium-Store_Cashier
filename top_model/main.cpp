@@ -19,6 +19,7 @@
 
 //C++ headers
 #include <algorithm>
+#include <chrono>
 
 using namespace std;
 using namespace cadmium;
