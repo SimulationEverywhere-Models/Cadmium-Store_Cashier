@@ -25,6 +25,7 @@ using namespace cadmium;
 using namespace cadmium::basic_models::pdevs;
 
 using TIME = NDTime;
+using hclock=chrono::high_resolution_clock;
 
 /***** Define input port for coupled models *****/
 
@@ -33,6 +34,7 @@ template <typename T>
 struct out_served : public out_port<servedClient<T>>{};
 
 int main(int argc, char ** argv) {
+    auto start = hclock::now(); //to measure simulation execution time
     /****** Client generator atomic model instantiation *******************/
     // Let's use the default constructor -> One client is created every 10 seconds
     shared_ptr<dynamic::modeling::model> generator = dynamic::translate::make_dynamic_atomic_model<ClientGenerator, TIME>("client_generator");
@@ -89,8 +91,18 @@ int main(int argc, char ** argv) {
 
     using logger_top=logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
 
+    auto elapsed1 = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
+    cout << "Model Created. Elapsed time: " << elapsed1 << "sec" << endl;
+
     /************** Runner call ************************/ 
     dynamic::engine::runner<NDTime, logger_top> r(store, {0});
+
+    elapsed1 = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
+    cout << "Runner Created. Elapsed time: " << elapsed1 << "sec" << endl;
+
     r.run_until(TIME("00:02:00:000"));
+
+    auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
+    cout << "Simulation took:" << elapsed << "sec" << endl;
     return 0;
 }

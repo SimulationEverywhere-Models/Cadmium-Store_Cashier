@@ -35,8 +35,8 @@ public:
     using input_ports = tuple<>;
     using output_ports = tuple<typename clientGenerator_defs<T>::out>;
 
-    double mean;
-    double stddev;
+    float mean;
+    float stddev;
     default_random_engine generator;
 
     // state definition
@@ -53,13 +53,13 @@ public:
         new (this) ClientGenerator(10, 0);
     }
     // use this constructor to set the client generation rate
-    explicit ClientGenerator(double mean_time) {
-        new (this) ClientGenerator(mean_time, 0);
+    explicit ClientGenerator(float meanTime) {
+        new (this) ClientGenerator(meanTime, 0);
     }
     // use this constructor to set client generation mean rate as well as its standard deviation.
-    explicit ClientGenerator(double mean_time, double stddev_time) {
-        mean = mean_time;
-        stddev = stddev_time;
+    explicit ClientGenerator(float meanTime, float stddevTime) {
+        mean = meanTime;
+        stddev = stddevTime;
         state = state_type();
     }
 
@@ -67,7 +67,7 @@ public:
     void internal_transition() {
         state.clientIndex++;
         state.clock += state.nextTimeout;
-        state.nextTimeout = nextTimeout();
+        state.nextTimeout = nextTimeout(mean, stddev);
     }
 
     // external transition
@@ -94,10 +94,10 @@ public:
         return state.nextTimeout;
     }
 
-    T nextTimeout() {
-        normal_distribution<double> distribution(mean, stddev);
+    T nextTimeout(float meanIn, float stddevIn) {
+        normal_distribution<double> distribution(meanIn, stddevIn);
         int rawTime = -1;
-        while ((rawTime < 0) || (rawTime > mean + stddev * 5)) {
+        while ((rawTime < 0) || ((float)rawTime > meanIn + stddevIn * 5)) {
             rawTime = (int) round(distribution(generator));
         }
         int seconds = rawTime % 60;

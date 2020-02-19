@@ -37,8 +37,8 @@ public:
     using input_ports = tuple<typename employee_defs<T>::inClient>;
     using output_ports = tuple<typename employee_defs<T>::outClient, typename employee_defs<T>::outAvailable>;
 
-    double mean;
-    double stddev;
+    float mean;
+    float stddev;
     default_random_engine generator;
 
     // state definition
@@ -61,11 +61,11 @@ public:
         new (this) Employee(id, 30, 0);
     }
     // use this constructor to create an employee with a specific client dispatching rate
-    explicit Employee(int id, double mean_time) {
+    explicit Employee(int id, float mean_time) {
         new (this) Employee(id, mean_time, 0);
     }
     // use this constructor to create an employee with a mean client dispatching rate as well as its standard deviation
-    explicit Employee(int id, double meanTime, double stddevTime) {
+    explicit Employee(int id, float meanTime, float stddevTime) {
         mean = meanTime;
         stddev = stddevTime;
         state.busy = false;
@@ -104,7 +104,7 @@ public:
                 state.busy = true;
                 state.nClientsServed ++;
                 state.client = msg.client;
-                state.nextTimeout = nextTimeout();
+                state.nextTimeout = nextTimeout(mean, stddev);
                 state.requiredTime = state.clock + state.nextTimeout;
             }
         }
@@ -139,10 +139,10 @@ public:
         return state.nextTimeout;
     }
 
-    T nextTimeout() {
-        normal_distribution<double> distribution(mean, stddev);
+    T nextTimeout(float meanIn, float stddevIn) {
+        normal_distribution<double> distribution(meanIn, stddevIn);
         int rawTime = -1;
-        while ((rawTime < 0) || (rawTime > mean + stddev * 5)) {
+        while ((rawTime < 0) || ((float)rawTime > meanIn + stddevIn * 5)) {
             rawTime = (int) round(distribution(generator));
         }
         int seconds = rawTime % 60;
