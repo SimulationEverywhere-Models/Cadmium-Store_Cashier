@@ -1,72 +1,86 @@
-//Cadmium Simulator headers
-#include <cadmium/modeling/ports.hpp>
-#include <cadmium/modeling/dynamic_model.hpp>
-#include <cadmium/modeling/dynamic_model_translator.hpp>
-#include <cadmium/engine/pdevs_dynamic_runner.hpp>
-#include <cadmium/logger/common_loggers.hpp>
+#include "main.hpp"
 
-//Time class header
-#include <NDTime.hpp>
-
-//Messages structures
-#include "../data_structures/message.hpp"
-
-//Atomic model headers
-#include "../atomics/client_generator.hpp"
-#include "../atomics/queue.hpp"
-#include "../atomics/employee.hpp"
-#include <cadmium/basic_model/pdevs/iestream.hpp> //Atomic model for inputs
-
-//C++ headers
-#include <algorithm>
-#include <chrono>
-
-using namespace std;
-using namespace cadmium;
-using namespace cadmium::basic_models::pdevs;
-
-using TIME = NDTime;
-using hclock=chrono::high_resolution_clock;
-
-/***** Define input port for coupled models *****/
 
 /***** Define output ports for coupled model *****/
 template <typename T>
 struct out_served : public out_port<servedClient<T>>{};
 
 int main(int argc, char ** argv) {
+    // Default values for the scenario
+    int n_employees = 3;         // There are three cashiers
+    float mean_cashiers = 30;   // Each cashier takes 30 seconds for dispatching a new client
+    float mean_clients = 10;      // The system generates 1 client every 10 seconds
+    float stddev_employees = 0;  // There is no standard deviation to the dispatching rate
+    float stddev_clients = 0;     // There is no standard deviation to the generation rate
+    TIME sim_time = TIME("00:30:00:000");   // By default, we simulate 30 minutes
+
+
+    if (argc > 7) {
+        cout << "Program used with more arguments than accepted. Last arguments will be ignored." << endl;
+    } else if (argc < 7) {
+        cout << "Program used with less arguments than accepted. Missing parameters will be set to their default value." << endl;
+    }
+    if (argc != 7) {
+        cout << "Correct usage:" << endl;
+        cout << "\t" << argv[0] << " <SIMULATION_TIME> <N_CASHIERS> <MEAN_TIME_TO_DISPATCH_CLIENT> <MEAN_TIME_BETWEEN_NEW_CLIENTS> <DISPATCHING_STDDEV> <NEW_CLIENTS_STDDEV>"<<endl;
+    }
+
+    argc = (argc > 7)? 7: argc;
+    stringstream ss;
+    switch(argc) {
+        case 7:
+            sscanf(argv[6], "%f", &stddev_clients);
+        case 6:
+            sscanf(argv[5], "%f", &stddev_employees);
+        case 5:
+            sscanf(argv[4], "%f", &mean_clients);
+        case 4:
+            sscanf(argv[3], "%f", &mean_cashiers);
+        case 3:
+            sscanf(argv[2], "%d", &n_employees);
+        case 2:
+            sim_time = TIME(argv[1]);
+        default:
+            cout << "";
+    }
+
+    cout << endl << "CONFIGURATION OF THE SCENARIO:" << endl;
+    cout << "\tSimulation time: " << sim_time << endl;
+    cout << "\tNumber of Employees: " << n_employees << endl;
+    cout << "\tMean time required by employee to dispatch clients: " << mean_cashiers << " seconds (standard deviation of " << stddev_employees << ")" << endl;
+    cout << "\tMean time between new clients: " << mean_clients << " seconds (standard deviation of " << stddev_clients << ")" << endl << endl;
+
     auto start = hclock::now(); //to measure simulation execution time
+    // Vector containing all the elements of the scenario
+    vector<shared_ptr<dynamic::modeling::model>> submodels_store;
     /****** Client generator atomic model instantiation *******************/
     // Let's use the default constructor -> One client is created every 10 seconds
-    shared_ptr<dynamic::modeling::model> generator = dynamic::translate::make_dynamic_atomic_model<ClientGenerator, TIME>("client_generator");
+    submodels_store.push_back(dynamic::translate::make_dynamic_atomic_model<ClientGenerator, TIME>("client_generator"));
 
     /****** Queue atomic model instantiation *******************/
-    shared_ptr<dynamic::modeling::model> queue = dynamic::translate::make_dynamic_atomic_model<Queue, TIME>("queue");
+    submodels_store.push_back(dynamic::translate::make_dynamic_atomic_model<Queue, TIME>("queue"));
 
-    /****** Subnet atomic models instantiation *******************/
-    // The first employee is very efficient: he/she needs only 20 seconds to dispatch a client
-    shared_ptr<dynamic::modeling::model> employee_1 = dynamic::translate::make_dynamic_atomic_model<Employee, TIME, int, double>("employee_1", 1, 20);
-    // However, the second employee is new: he/she needs a mean of 30 seconds per client.
-    // Moreover, he/she doesn't know well the procedure, and sometimes it takes shorter/longer time.
-    // Let's configure a standard deviation of 4 seconds
-    shared_ptr<dynamic::modeling::model> employee_2 = dynamic::translate::make_dynamic_atomic_model<Employee, TIME,int, double, double>("employee_2", 2, 30, 4);
+    /****** Employees atomic models instantiation *******************/
+    for (int i = 0; i < n_employees; i++) {
+        submodels_store.push_back(dynamic::translate::make_dynamic_atomic_model<Employee, TIME>("employee_" + to_string(i), i, mean_cashiers, stddev_employees));
+        // submodels_store.push_back(dynamic::translate::make_dynamic_atomic_model<Employee, TIME, int, float, float>("employee_" + to_string(i), i, mean_cashiers, stddev_employees));
+    }
 
-    /*******ABP SIMULATOR COUPLED MODEL********/
+    /*******STORE CASHIER SIMULATOR COUPLED MODEL********/
     dynamic::modeling::Ports iports_store = {};
     dynamic::modeling::Ports oports_store = {typeid(out_served<TIME>)};
-    dynamic::modeling::Models submodels_store = {generator, queue, employee_1, employee_2};
     dynamic::modeling::EICs eics_store = {};
-    dynamic::modeling::EOCs eocs_store = {
-        dynamic::translate::make_EOC<employee_defs<TIME>::outClient, out_served<TIME>>("employee_1"),
-        dynamic::translate::make_EOC<employee_defs<TIME>::outClient, out_served<TIME>>("employee_2"),
-    };
+    dynamic::modeling::EOCs eocs_store;
+    for (int i = 0; i < n_employees; i++) {
+        eocs_store.push_back(dynamic::translate::make_EOC<employee_defs<TIME>::outClient, out_served<TIME>>("employee_" + to_string(i)));
+    }
     dynamic::modeling::ICs ics_store = {
-        dynamic::translate::make_IC<clientGenerator_defs<TIME>::out, queue_defs<TIME>::inNewClient>("client_generator", "queue"),
-        dynamic::translate::make_IC<queue_defs<TIME>::outPairedClient, employee_defs<TIME>::inClient>("queue", "employee_1"),
-        dynamic::translate::make_IC<employee_defs<TIME>::outAvailable, queue_defs<TIME>::inAvailableEmployee>("employee_1","queue"),
-        dynamic::translate::make_IC<queue_defs<TIME>::outPairedClient, employee_defs<TIME>::inClient>("queue", "employee_2"),
-        dynamic::translate::make_IC<employee_defs<TIME>::outAvailable, queue_defs<TIME>::inAvailableEmployee>("employee_2","queue"),
+            dynamic::translate::make_IC<clientGenerator_defs<TIME>::out, queue_defs<TIME>::inNewClient>("client_generator", "queue"),
     };
+    for (int i = 0; i < n_employees; i++) {
+        ics_store.push_back(dynamic::translate::make_IC<queue_defs<TIME>::outPairedClient, employee_defs<TIME>::inClient>("queue", "employee_" + to_string(i)));
+        ics_store.push_back(dynamic::translate::make_IC<employee_defs<TIME>::outAvailable, queue_defs<TIME>::inAvailableEmployee>("employee_" + to_string(i),"queue"));
+    }
     shared_ptr<dynamic::modeling::coupled<TIME>> store;
     store = make_shared<dynamic::modeling::coupled<TIME>>(
             "store", submodels_store, iports_store, oports_store, eics_store, eocs_store, ics_store);
@@ -101,7 +115,7 @@ int main(int argc, char ** argv) {
     elapsed1 = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
     cout << "Runner Created. Elapsed time: " << elapsed1 << "sec" << endl;
 
-    r.run_until(TIME("00:02:00:000"));
+    r.run_until(sim_time);
 
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
     cout << "Simulation took:" << elapsed << "sec" << endl;
