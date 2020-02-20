@@ -154,7 +154,7 @@ public:
     }
 
     friend ostringstream &operator << (ostringstream &os, const typename Employee<T>::state_type &i) {
-        os << "< busy: " << i.busy << "& clients so far: " << i.nClientsServed << " >";
+        //os << "< busy: " << i.busy << "& clients so far: " << i.nClientsServed << " >";
         return os;
     }
 };

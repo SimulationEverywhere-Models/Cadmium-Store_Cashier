@@ -99,18 +99,18 @@ int main(int argc, char ** argv) {
         }
     };
     
-    using state=logger::logger<logger::logger_state, dynamic::logger::formatter<TIME>, oss_sink_state>;
-    using log_messages=logger::logger<logger::logger_messages, dynamic::logger::formatter<TIME>, oss_sink_messages>;
-    using global_time_mes=logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_messages>;
-    using global_time_sta=logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_state>;
+    //using state=logger::logger<logger::logger_state, dynamic::logger::formatter<TIME>, oss_sink_state>;
+    //using log_messages=logger::logger<logger::logger_messages, dynamic::logger::formatter<TIME>, oss_sink_messages>;
+    //using global_time_mes=logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_messages>;
+    //using global_time_sta=logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_state>;
 
-    using logger_top=logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
+    //using logger_top=logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
 
     auto elapsed1 = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
     cout << "Model Created. Elapsed time: " << elapsed1 << "sec" << endl;
 
     /************** Runner call ************************/ 
-    dynamic::engine::runner<NDTime, logger_top> r(store, {0});
+    dynamic::engine::runner<NDTime> r(store, {0});
 
     elapsed1 = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
     cout << "Runner Created. Elapsed time: " << elapsed1 << "sec" << endl;
