@@ -103,7 +103,6 @@ int main(int argc, char ** argv) {
     //using log_messages=logger::logger<logger::logger_messages, dynamic::logger::formatter<TIME>, oss_sink_messages>;
     //using global_time_mes=logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_messages>;
     //using global_time_sta=logger::logger<logger::logger_global_time, dynamic::logger::formatter<TIME>, oss_sink_state>;
-
     //using logger_top=logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
 
     auto elapsed1 = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
@@ -118,6 +117,6 @@ int main(int argc, char ** argv) {
     r.run_until(sim_time);
 
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
-    cout << "Simulation took:" << elapsed << "sec" << endl;
+    cout << "Simulation took: " << elapsed << "sec" << endl;
     return 0;
 }

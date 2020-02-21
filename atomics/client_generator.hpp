@@ -109,7 +109,7 @@ public:
     }
 
     friend ostringstream &operator << (ostringstream &os, const typename ClientGenerator<T>::state_type &i) {
-        os << "< new client: " << i.clientIndex << "& in: " << i.nextTimeout << " >";
+        // os << "< new client: " << i.clientIndex << "& in: " << i.nextTimeout << " >";
         return os;
     }
 };

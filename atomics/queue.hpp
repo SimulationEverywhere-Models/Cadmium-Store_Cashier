@@ -114,7 +114,7 @@ public:
     }
 
     friend ostringstream &operator << (ostringstream &os, const typename Queue<T>::state_type &i) {
-        os << "< clients: " << i.waitingClients.size() << "& employees: " << i.availableEmployees.size() << " >";
+        // os << "< clients: " << i.waitingClients.size() << "& employees: " << i.availableEmployees.size() << " >";
         return os;
     }
 };
