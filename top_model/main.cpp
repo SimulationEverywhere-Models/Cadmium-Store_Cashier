@@ -106,17 +106,17 @@ int main(int argc, char ** argv) {
     //using logger_top=logger::multilogger<state, log_messages, global_time_mes, global_time_sta>;
 
     auto elapsed1 = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
-    cout << "Model Created. Elapsed time: " << elapsed1 << "sec" << endl;
+    cout << "Model Created. Elapsed time: " << elapsed1 << " sec" << endl;
 
     /************** Runner call ************************/ 
     dynamic::engine::runner<NDTime> r(store, {0});
 
     elapsed1 = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
-    cout << "Runner Created. Elapsed time: " << elapsed1 << "sec" << endl;
+    cout << "Runner Created. Elapsed time: " << elapsed1 << " sec" << endl;
 
     r.run_until(sim_time);
 
     auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1>>>(hclock::now() - start).count();
-    cout << "Simulation took: " << elapsed << "sec" << endl;
+    cout << "Simulation took: " << elapsed << " sec" << endl;
     return 0;
 }
